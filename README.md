@@ -21,6 +21,7 @@ Booking Buddy is a conversational AI assistant that connects Kenyan customers wi
 - **Node.js** with **Express** for the backend API
 - **MongoDB** with **Mongoose** for data storage
 - **n8n** for workflow automation and Telegram bot integration
+- **Airtable** for storing providers information for bookings
 - **Google Sheets** for booking records
 - **M-PESA** for payment processing
 - **dotenv** for environment variable management
@@ -41,7 +42,7 @@ Booking Buddy is a conversational AI assistant that connects Kenyan customers wi
 
 1. **Clone the repository:**
    ```sh
-   git clone <your-repo-url>
+   git clone https://github.com/derrickngari/booking-buddy-agent.git
    cd Booking_Buddy
    ```
 
