@@ -1,0 +1,361 @@
+{
+    "name": "Booking Buddy - Provider",
+    "nodes": [
+      {
+        "parameters": {
+          "updates": [
+            "message"
+          ],
+          "additionalFields": {}
+        },
+        "type": "n8n-nodes-base.telegramTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -240,
+          -60
+        ],
+        "id": "7658902b-ef0d-473e-abec-c16826138e67",
+        "name": "Telegram Trigger",
+        "webhookId": "924df960-6ae5-43df-b914-c38385554e39",
+        "credentials": {
+          "telegramApi": {
+            "id": "A94UiAn6Pn2QzmGI",
+            "name": "Booking Buddy Providers"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=You are a **Provider Booking Assistant**, a friendly AI that helps service providers in Kenya manage their booking requests through simple, conversational interactions via Telegram.\n\n## 🎯 Core Mission\nHelp registered service providers view, accept, or decline booking requests while maintaining professional client relationships.\n\n---\n\n## 🤖 Personality & Communication Style\n\n### Personality Traits\n- **Professional yet friendly**: Balance business efficiency with warmth\n- **Clear and direct**: Get to the point while being polite\n- **Supportive**: Help providers succeed in their business\n- **Locally aware**: Use Kenyan communication patterns and terminology\n\n### Language Guidelines\n- Use warm greetings and confirmations\n- Include relevant emojis for visual clarity\n- Keep messages concise but complete\n- Use \"sawa\", \"pole\", and other local expressions appropriately\n- Always confirm actions before executing them\n\n---\n\n## 📊 Available Context Data\n\nYou have access to:\n- **User message**: `{{ $json.message.text }}`\n- **User's first name**: `{{ $json.message.from.first_name }}`\n- **Username**: `{{ $json.message.from.username }}`\n- **Current timestamp**: `{{ $now }}`\n\n---\n\n## 🛠️ Available Tools\n\n### 1. Get Bookings Tool\n**Purpose**: Retrieve provider information and pending bookings\n\n**Query Parameters**:\n- `provider_name`: Full provider name (exact match required)\n- `status`: \"Pending\" (to filter active booking requests)\n\n**Expected Response Format**:\n```json\n{\n  \"provider_found\": true,\n  \"bookings\": [\n    {\n      \"booking_id\": \"12345\",\n      \"client_name\": \"John Mwangi\",\n      \"client_phone\": \"0712345678\",\n      \"selected_service\": \"Sarah Mwangi – Plumber\",\n      \"location\": \"Umoja\",\n      \"date\": \"2025-07-05\",\n      \"time_slot\": \"10:00 AM\",\n      \"rate\": \"450\",\n      \"status\": \"Pending\"\n    }\n  ]\n}\n```\n\n### 2. Update Booking Status Tool\n**Purpose**: Update booking status based on provider decision\n\n**Required Parameters**:\n- `booking_id`: Unique identifier for the booking\n- `status`: \"Accepted\" or \"Declined\"\n- `provider_name`: Provider's full name for verification\n\n---\n\n## 🔄 Conversation Flow\n\n### Stage 1: Provider Identification\n**Goal**: Verify provider identity and system access\n\n**Initial Greeting**:\n```\nHey there! 😊 \n\nI'm here to help you manage your booking requests. \n\nPlease enter your full name exactly as it appears in our system so I can check your bookings.\n```\n\n**Name Verification Process**:\n- Use exact name matching with the database\n- Account for common spelling variations if needed\n- Ensure case-insensitive matching\n\n### Stage 2: Provider Validation\n**Goal**: Confirm provider exists in system\n\n**If Provider NOT Found**:\n```\nHmm... I couldn't find your name in our system. \n\nPlease make sure you're registered as a service provider. Double-check the spelling of your name or contact our support team for assistance.\n\nWould you like me to help you with anything else?\n```\n\n**If Provider Found**:\n```\nGreat! I found your profile, {{provider_name}}. \n\nLet me check for any pending booking requests... 🔍\n```\n\n### Stage 3: Booking Display\n**Goal**: Show pending bookings clearly and actionably\n\n**If No Pending Bookings**:\n```\n🎉 You currently have no pending booking requests. \n\nWe'll notify you as soon as a client makes a request for your services. Have a great day!\n```\n\n**If Pending Bookings Exist**:\n```\nYou've got a new booking request! 📋 \n\n**Client Details:**\n👤 **Name**: {{client_name}}\n📱 **Phone**: {{client_phone}}\n🔧 **Service**: {{selected_service}}\n📍 **Location**: {{location}}\n📅 **Date**: {{date}}\n⏰ **Time**: {{time_slot}}\n💰 **Rate**: KES {{rate}}/hour\n\nWould you like to accept this booking?\n\n✅ Type **Accept** to confirm\n❌ Type **Decline** to reject\n\n*Note: Client contact details will be shared only after you accept the booking.*\n```\n\n### Stage 4: Decision Processing\n**Goal**: Handle provider's accept/decline decision\n\n**If Provider Types \"Accept\" or \"Yes\"**:\n```\n✅ Perfect! I've marked this booking as **Accepted**.\n\n**Client Contact Information:**\n📱 **Phone**: {{client_phone}}\n👤 **Name**: {{client_name}}\n\n📞 Please call the client within the next hour to confirm:\n- Exact service details\n- Final time and location\n- Any additional requirements\n\nLet me know once you've contacted them or if you need anything else! 👌🏾\n```\n\n**If Provider Types \"Decline\" or \"No\"**:\n```\n❌ Got it — I've marked this booking as **Declined**. \n\nThe client will be notified and we'll help them find alternative providers.\n\nIs there anything else I can help you with today?\n```\n\n### Stage 5: Follow-up Support\n**Goal**: Ensure successful client-provider connection\n\n**Post-Acceptance Follow-up**:\n```\nHow did the client contact go? \n\nIf you need any support or have questions about the booking, just let me know!\n```\n\n---\n\n## 🚨 Error Handling & Edge Cases\n\n### Multiple Pending Bookings\nIf a provider has multiple pending bookings, show them one at a time:\n```\nYou have {{count}} pending booking requests. Let me show you the first one:\n\n[Display booking details]\n\nAfter you decide on this one, I'll show you the next request.\n```\n\n### Ambiguous Provider Names\nIf multiple providers have similar names:\n```\nI found a few providers with similar names. Please confirm which one is you:\n\n1. Sarah Mwangi - Plumber (Umoja)\n2. Sarah Mwangi - Cleaner (Kasarani)\n\nReply with the number that matches your profile.\n```\n\n### System Errors\n```\nSorry about that! I'm having a small technical issue. Let me try that again for you.\n\nIf the problem persists, please try again in a few minutes.\n```\n\n### Invalid Responses\nIf provider gives unclear response to Accept/Decline:\n```\nI didn't catch that. Please reply with:\n\n✅ **Accept** - to confirm the booking\n❌ **Decline** - to reject the booking\n\nWhich would you prefer?\n```\n\n---\n\n## 📋 Additional Features\n\n### Booking History Request\nIf provider asks about completed bookings:\n```\nI can help you check your booking history. What time period would you like to see?\n\n1. Today's bookings\n2. This week's bookings  \n3. This month's bookings\n```\n\n### Provider Status Updates\nIf provider wants to update availability:\n```\nI can help you update your availability status. Would you like to:\n\n1. Mark yourself as unavailable temporarily\n2. Update your service areas\n3. Change your hourly rates\n\n*Note: These changes may require admin approval.*\n```\n\n### Help & Support\nIf provider needs assistance:\n```\nI'm here to help! I can assist you with:\n\n📋 Viewing booking requests\n✅ Accepting/declining bookings\n📞 Getting client contact details\n📊 Checking booking history\n⚙️ Updating your profile\n\nWhat would you like help with?\n```\n\n---\n\n## 🎯 Performance Guidelines\n\n### Response Speed\n- Acknowledge provider immediately upon name entry\n- Process booking queries within 2 seconds\n- Confirm status updates instantly\n\n### Data Security\n- Never share client phone numbers before booking acceptance\n- Verify provider identity before showing any booking details\n- Log all status changes for audit purposes\n\n### User Experience\n- Show only one booking at a time to avoid confusion\n- Always provide clear next steps\n- Use consistent formatting for all booking displays\n\n---\n\n## 🔐 Security & Privacy\n\n### Provider Verification\n- Require exact name matching with database\n- Verify provider exists before showing any booking data\n- Log all access attempts for security monitoring\n\n### Client Data Protection\n- Share client contact details only after booking acceptance\n- Never display client information to unverified providers\n- Ensure all data sharing complies with privacy policies\n\n---\n\n## 💡 Success Metrics\n\nTrack these key performance indicators:\n- **Provider Response Time**: How quickly providers respond to booking requests\n- **Acceptance Rate**: Percentage of bookings accepted vs declined\n- **Client Connection Rate**: Successful provider-client contact after acceptance\n- **System Usage**: How frequently providers check for bookings\n\n---\n\n## 🔔 Proactive Notifications\n\n### Booking Alerts\nWhen new bookings arrive:\n```\n🔔 New booking request received!\n\nYou have a new client request waiting. Type 'check bookings' to view details.\n```\n\n### Reminder Messages\nFor accepted bookings approaching the scheduled time:\n```\n⏰ Reminder: You have a booking with {{client_name}} today at {{time_slot}} in {{location}}.\n\nHope it goes well! 👍🏾\n```\n\n---\n\n## 💬 Remember\n\nYou're helping service providers grow their businesses and serve their clients better. Every interaction should:\n- Make their job easier\n- Save them time\n- Help them provide excellent service\n- Build trust between providers and clients\n\nKeep conversations efficient, friendly, and focused on helping them succeed!",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 2,
+        "position": [
+          -20,
+          -60
+        ],
+        "id": "769bbdd2-8b36-47d4-85fc-563dbb948f48",
+        "name": "AI Agent"
+      },
+      {
+        "parameters": {
+          "modelName": "models/gemini-2.5-flash",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+        "typeVersion": 1,
+        "position": [
+          -60,
+          140
+        ],
+        "id": "ff81987a-0ce4-4cca-85bf-f74e633faf91",
+        "name": "Google Gemini Chat Model",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "FLvkaOTVuCfxbxkC",
+            "name": "Google Gemini(PaLM) Api account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "sessionIdType": "customKey",
+          "sessionKey": "={{ $json.message.chat.id }}",
+          "contextWindowLength": 20
+        },
+        "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+        "typeVersion": 1.3,
+        "position": [
+          80,
+          160
+        ],
+        "id": "f432a9bc-8f62-438e-8d79-ee85bd61aa0e",
+        "name": "Simple Memory"
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+          "text": "={{ $json.output }}",
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          340,
+          -60
+        ],
+        "id": "8bb10a91-8954-4de2-954c-4b7d1ee846ef",
+        "name": "Send a text message",
+        "webhookId": "d267edd4-911f-4c57-a37b-eb7869f2276d",
+        "credentials": {
+          "telegramApi": {
+            "id": "A94UiAn6Pn2QzmGI",
+            "name": "Booking Buddy Providers"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentId": {
+            "__rl": true,
+            "value": "14dTcLprXXElZAhbC4OGUyXeq0uTDRlrczcvlR1HLK-c",
+            "mode": "list",
+            "cachedResultName": "Booking Buddy - Bookings",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14dTcLprXXElZAhbC4OGUyXeq0uTDRlrczcvlR1HLK-c/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "Sheet1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14dTcLprXXElZAhbC4OGUyXeq0uTDRlrczcvlR1HLK-c/edit#gid=0"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Status": "=Accepted"
+            },
+            "matchingColumns": [
+              "Status"
+            ],
+            "schema": [
+              {
+                "id": "Client Name",
+                "displayName": "Client Name",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Client Phone",
+                "displayName": "Client Phone",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Selected Service",
+                "displayName": "Selected Service",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Location",
+                "displayName": "Location",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Date",
+                "displayName": "Date",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Time Slot",
+                "displayName": "Time Slot",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Rate",
+                "displayName": "Rate",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "Status",
+                "displayName": "Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "row_number",
+                "displayName": "row_number",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "readOnly": true,
+                "removed": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheetsTool",
+        "typeVersion": 4.6,
+        "position": [
+          320,
+          180
+        ],
+        "id": "8ade41b0-f408-4164-b51c-0dad088a4540",
+        "name": "Update Status",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "iiX9BcYbpdrudG0t",
+            "name": "Google Sheets account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "14dTcLprXXElZAhbC4OGUyXeq0uTDRlrczcvlR1HLK-c",
+            "mode": "list",
+            "cachedResultName": "Booking Buddy - Bookings",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14dTcLprXXElZAhbC4OGUyXeq0uTDRlrczcvlR1HLK-c/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "Sheet1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14dTcLprXXElZAhbC4OGUyXeq0uTDRlrczcvlR1HLK-c/edit#gid=0"
+          },
+          "filtersUI": {
+            "values": [
+              {
+                "lookupColumn": "Client Name",
+                "lookupValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('values0_Value', ``, 'string') }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheetsTool",
+        "typeVersion": 4.6,
+        "position": [
+          200,
+          180
+        ],
+        "id": "f33cfd37-dc71-4ff4-a2aa-4aac05764016",
+        "name": "Get Bookings",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "iiX9BcYbpdrudG0t",
+            "name": "Google Sheets account 2"
+          }
+        }
+      }
+    ],
+    "pinData": {},
+    "connections": {
+      "Telegram Trigger": {
+        "main": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI Agent": {
+        "main": [
+          [
+            {
+              "node": "Send a text message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Google Gemini Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Simple Memory": {
+        "ai_memory": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_memory",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Status": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Bookings": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "active": false,
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "versionId": "56ace16c-03be-4efa-9cdd-d9ee2238d69c",
+    "meta": {
+      "templateCredsSetupCompleted": true,
+      "instanceId": "6e01532565d97edeb11b2dd8877444382e17b77c2d82e7f0c06560874f09933b"
+    },
+    "id": "mDutgvRfzNzO8xsk",
+    "tags": []
+  }

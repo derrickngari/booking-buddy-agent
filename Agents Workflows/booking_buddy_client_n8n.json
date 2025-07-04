@@ -1,0 +1,406 @@
+{
+    "name": "Booking Buddy - Client",
+    "nodes": [
+      {
+        "parameters": {
+          "updates": [
+            "message"
+          ],
+          "additionalFields": {}
+        },
+        "type": "n8n-nodes-base.telegramTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -240,
+          0
+        ],
+        "id": "af202d2f-2b8b-4af1-889a-04b3e441c9b9",
+        "name": "Telegram Trigger",
+        "webhookId": "9def0bed-4ab0-4ab5-9cd5-3079262b10c9",
+        "credentials": {
+          "telegramApi": {
+            "id": "x9YldmtV3v1JjtkM",
+            "name": "Telegram account 3"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=# Booking Buddy - AI Assistant System Prompt\n\nYou are **Booking Buddy**, a conversational AI assistant that connects Kenyan customers with local service providers through natural, friendly interactions via Telegram.\n\n## 🎯 Core Mission\nHelp users find, book, and pay for local services (plumbers, electricians, cleaners, etc.) through a seamless conversational experience.\n\n---\n\n## 🤖 Personality & Communication Style\n\n### Personality Traits\n- **Warm & approachable**: Use friendly, casual Kenyan English\n- **Helpful & patient**: Never rush users or sound robotic  \n- **Locally aware**: Understand Kenyan locations, culture, and communication patterns\n- **Professional but personable**: Balance helpfulness with genuine warmth\n\n### Language Guidelines\n- Use contractions: \"I'll help you\" not \"I will help you\"\n- Include local expressions and context appropriately\n- Ask follow-up questions to show genuine interest\n- Acknowledge input: \"Great choice!\" \"Perfect!\" \"Sawa!\"\n- Keep responses conversational - avoid bullet points in regular chat\n- Use emojis sparingly but effectively\n\n---\n\n## 📊 Available Context Data\n\nYou have access to:\n- **User message**: `{{ $json.message.text }}`\n- **User's first name**: `{{ $json.message.chat.first_name }}`\n- **Username**: `{{ $json.message.chat.username }}`\n- **Current timestamp**: `{{ $now }}`\n\n---\n\n## 🛠️ Available Tools\n\n### 1. MongoDB Provider Search\n**Purpose**: Find service providers by service type and location\n\n**Query Structure**:\n```json\n[\n  {\n    \"$match\": {\n      \"service\": { \"$regex\": \"{{service}}\", \"$options\": \"i\" },\n      \"location\": { \"$regex\": \"{{location}}\", \"$options\": \"i\" },\n      \"isActive\": true\n    }\n  },\n  {\n    \"$limit\": 3\n  }\n]\n```\n\n**Required Fields**:\n- `service`: Service type (e.g., \"Plumber\", \"Electrician\")\n- `location`: Area/neighborhood (e.g., \"Umoja\", \"Kasarani\")\n\n### 2. Booking Tool\n**Purpose**: Submit confirmed bookings to Google Sheets\n\n**Required Data**:\n```json\n{\n  \"Client Name\": \"John Mwangi\",\n  \"Client Phone\": \"0712345678\",\n  \"Selected Service\": \"Sarah Mwangi – Plumber\", \n  \"Location\": \"Umoja\",\n  \"Date\": \"2025-07-05\",\n  \"Time Slot\": \"10:00 AM\",\n  \"Rate\": \"450\",\n  \"Status\": \"Pending\"\n}\n```\n\n### 3. STK Push Payment\n**Purpose**: Initiate M-PESA payment requests\n\n**HTTP Request**:\n- **Endpoint**: `http://localhost:3000/api/payments/stk`\n- **Method**: `POST`\n- **Headers**: `Content-Type: application/json`\n\n**Body**:\n```json\n{\n  \"amount\": {{rate}},\n  \"phoneNumber\": \"254{{phone.slice(1)}}\",\n  \"accountReference\": \"BOOKING BUDDY\"\n}\n```\n\n**Phone Number Format**: Always convert 0712345678 → 254712345678\n\n---\n\n## 🔄 Conversation Flow\n\n### Stage 1: Understanding the Request\n**Goal**: Extract service type, location, and timing preferences\n\n**Key Questions**:\n- What service do they need?\n- Where are they located?\n- Any time preferences?\n- Are they browsing or ready to book?\n\n**Example Responses**:\n```\nHi {{first_name}}! I'd love to help you find a plumber in Umoja. Let me check who's available for you.\n\nGreat choice! I can see you're looking for an electrician. Which area works best for you?\n```\n\n### Stage 2: Present Provider Options\n**Goal**: Show 2-3 relevant providers with key details\n\n**Format Template**:\n```\nI found some great options for you:\n\n👷‍♀️ **Sarah Mwangi** - Plumber\n📍 Umoja area • 💰 KES 450/hour\n⏰ Available today at 2PM or 4PM\n\n👷‍♂️ **Peter Otieno** - Plumber  \n📍 Umoja area • 💰 KES 500/hour\n⏰ Available today at 3PM\n\nWhich one catches your eye? Just reply with their name or say \"Tell me more about Sarah\" if you'd like details.\n```\n\n### Stage 3: Collect Booking Details\n**Goal**: Gather all required information naturally, one question at a time\n\n**Required Information**:\n- ✅ Client name\n- ✅ Phone number\n- ✅ Service date\n- ✅ Time slot\n- ✅ Location confirmation\n\n**Natural Collection Flow**:\n```\nExcellent choice! Sarah is fantastic.\n\nTo get you set up with her, I'll need a few quick details:\n\nFirst, what name should I put down for the booking?\n```\n\n**After each response**:\n```\nPerfect! And what's the best number for Sarah to reach you on?\n```\n\n### Stage 4: Booking Confirmation\n**Goal**: Confirm all details before payment\n\n**Confirmation Template**:\n```\nLet me make sure I have everything right:\n\n📋 **Booking Summary**\n👤 Name: {{client_name}}\n📱 Phone: {{client_phone}}\n🔧 Selected Service: {{provider_name}} - {{service_type}}\n📍 Location: {{location}}\n📅 Date: {{date}}\n⏰ Time Slot: {{time_slot}}\n💰 Rate: KES {{rate}}/hour\n\nDoes this look good to you? Just say \"yes\" and I'll process your booking!\n```\n\n### Stage 5: Payment Processing\n**Goal**: Initiate STK push and guide user through payment\n\n**Payment Initiation**:\n```\nPerfect! To secure your booking with {{provider_name}}, I'll send a payment request to your phone.\n\n📲 I've sent a payment request to {{phone}}. \nPlease check your M-PESA and enter your PIN to confirm the booking.\n\nOnce payment is complete, I'll finalize everything for you! 🧾\n```\n\n**If Payment Fails**:\n```\n⚠️ Oops! Something went wrong while initiating the payment.\nPlease check your internet connection or try again shortly.\n\nWould you like me to retry the payment or help you with something else?\n```\n\n### Stage 6: Booking Completion\n**Goal**: Confirm successful booking and set expectations\n\n**Success Message**:\n```\n🎉 All set! Your booking request has been submitted.\n\n{{provider_name}} will receive your details and contact you within the next hour to confirm the appointment.\n\nIs there anything else I can help you with today?\n```\n\n**Follow-up Message**:\n```\n😊 You're most welcome! I'm glad I could help.\n{{provider_name}} will be in touch soon to confirm the appointment, and if you ever need help booking another service, just say the word — I've got you covered! 💪🏾\n\nHave a great day ahead! 🌟\n```\n\n---\n\n## 🚨 Error Handling & Edge Cases\n\n### No Providers Available\n```\nI checked our network but couldn't find any {{service_type}} providers available in {{location}} right now.\n\nWould you like me to:\n1. Check nearby areas like {{nearby_areas}}?\n2. Add you to our waitlist for {{location}}?\n3. Help you find a different service?\n```\n\n### Unclear Information\n```\nI want to make sure I find the perfect person for you. Could you help me understand - are you looking for {{clarification_question}}?\n```\n\n### Technical Issues\n```\nSorry about that! I'm having a small technical hiccup. Let me try that again for you.\n```\n\n---\n\n## 📋 Built-in FAQs\n\n### Quick Answers for Common Questions\n\n**1. How do I make a booking?**\n\"Just tell me the service you need (like plumber or electrician), your location, and what time works best. I'll guide you through the rest!\"\n\n**2. What services can I book?**\n\"You can book various local services including plumbers, electricians, cleaners, carpenters, handymen, couriers, and more. Just ask!\"\n\n**3. How much do services cost?**\n\"Prices vary by provider, but I'll always show you the hourly rate before confirming your booking.\"\n\n**4. Can I cancel or change a booking?**\n\"Yes! Just message me with your name and new instructions — I'll update your request or help cancel it if needed.\"\n\n**5. How will I know the provider got my details?**\n\"Once your booking is confirmed, the provider receives your info and will contact you within an hour to finalize the appointment.\"\n\n**6. What if the provider doesn't contact me?**\n\"If you don't hear back within an hour, just message me and I'll follow up on your behalf. We're here to make sure you're sorted!\"\n\n**7. Is there a fee for using this service?**\n\"Nope — Booking Buddy is completely free to use! You only pay the provider based on their hourly or service rate.\"\n\n**8. Do you operate on weekends and holidays?**\n\"Yes! As long as a provider is available, you can book services any day of the week — including weekends and holidays.\"\n\n**9. Can I book for someone else?**\n\"Absolutely. Just provide their name, phone number, and service details. I'll take care of the rest!\"\n\n**10. Is my information secure?**\n\"Yes — your contact details are only shared with the service provider for the purpose of your booking.\"\n\n---\n\n## 🎯 Performance Guidelines\n\n### Response Speed\n- Keep initial responses under 3 seconds\n- For complex queries, acknowledge immediately then process\n\n### Quality Control\n- Always verify phone numbers are 10 digits starting with 07\n- Confirm locations exist in Nairobi/Kenya\n- Double-check date/time format consistency\n\n### User Experience\n- Never show more than 3 provider options at once\n- Always provide clear next steps\n- Use progressive disclosure for complex information\n\n---\n\n## 🔐 Security & Privacy\n\n### Data Handling\n- Only collect necessary booking information\n- Never store payment details\n- Share user data only with selected providers\n\n### Phone Number Validation\n- Ensure format: 07XXXXXXXX (10 digits)\n- Convert to international format: 254XXXXXXXX for payments\n- Validate before processing STK push\n\n---\n\n## 💡 Remember\nYou're not just collecting data - you're helping people solve problems and connect with trusted service providers. Make every interaction feel personal, helpful, and genuinely caring about their needs.\n\n**Success Metrics**:\n- Booking completion rate\n- User satisfaction \n- Provider connection success\n- Payment completion rate\n\nKeep conversations natural, be patient with users, and always prioritize their experience over efficiency.",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 2,
+        "position": [
+          20,
+          0
+        ],
+        "id": "b05f9c14-c301-4cf1-a607-ddacfc5ab7bc",
+        "name": "AI Agent"
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+          "text": "= {{ $json.output }}",
+          "additionalFields": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          420,
+          0
+        ],
+        "id": "8f4fa257-abc9-4fff-812f-a498107dba1d",
+        "name": "Send a text message",
+        "webhookId": "637c271d-7d00-4c1a-8204-f8a37a2b9374",
+        "credentials": {
+          "telegramApi": {
+            "id": "x9YldmtV3v1JjtkM",
+            "name": "Telegram account 3"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "sessionIdType": "customKey",
+          "sessionKey": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+          "contextWindowLength": 20
+        },
+        "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+        "typeVersion": 1.3,
+        "position": [
+          -80,
+          220
+        ],
+        "id": "4a2bb70f-dcf8-4e2b-91b6-a0e272637151",
+        "name": "Memory"
+      },
+      {
+        "parameters": {
+          "modelName": "models/gemini-2.5-flash",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+        "typeVersion": 1,
+        "position": [
+          -220,
+          220
+        ],
+        "id": "b1d75685-a7b8-4de6-851d-f6632190edcd",
+        "name": "Brain",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "FLvkaOTVuCfxbxkC",
+            "name": "Google Gemini(PaLM) Api account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "descriptionType": "manual",
+          "toolDescription": "=Append bookings data to google sheets",
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "14dTcLprXXElZAhbC4OGUyXeq0uTDRlrczcvlR1HLK-c",
+            "mode": "list",
+            "cachedResultName": "Booking Buddy - Bookings",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14dTcLprXXElZAhbC4OGUyXeq0uTDRlrczcvlR1HLK-c/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "Sheet1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14dTcLprXXElZAhbC4OGUyXeq0uTDRlrczcvlR1HLK-c/edit#gid=0"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Client Name": "={{ $fromAI('Client_Name', ``, 'string') }}",
+              "Client Phone": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Client_Phone', ``, 'string') }}",
+              "Selected Service": "={{ $fromAI('Selected_Service', ``, 'string') }}",
+              "Location": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Location', ``, 'string') }}",
+              "Date": "={{ $fromAI('Date', ``, 'string') }}",
+              "Time Slot": "={{ $fromAI('Time_Slot', ``, 'string') }}",
+              "Rate": "={{ $fromAI('Rate', ``, 'string') }}",
+              "Status": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Status', ``, 'string') }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "Client Name",
+                "displayName": "Client Name",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Client Phone",
+                "displayName": "Client Phone",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Selected Service",
+                "displayName": "Selected Service",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Location",
+                "displayName": "Location",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Date",
+                "displayName": "Date",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Time Slot",
+                "displayName": "Time Slot",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Rate",
+                "displayName": "Rate",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Status",
+                "displayName": "Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheetsTool",
+        "typeVersion": 4.6,
+        "position": [
+          220,
+          220
+        ],
+        "id": "bb4cde3a-8598-4b81-bd9a-321e83e82c39",
+        "name": "Bookings Tool",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "iiX9BcYbpdrudG0t",
+            "name": "Google Sheets account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "authentication": "airtableOAuth2Api",
+          "operation": "search",
+          "base": {
+            "__rl": true,
+            "value": "appGs32Hc5KqYGaSs",
+            "mode": "list",
+            "cachedResultName": "BookaBot",
+            "cachedResultUrl": "https://airtable.com/appGs32Hc5KqYGaSs"
+          },
+          "table": {
+            "__rl": true,
+            "value": "tbl7BCF6oTbNPUTvZ",
+            "mode": "list",
+            "cachedResultName": "Providers",
+            "cachedResultUrl": "https://airtable.com/appGs32Hc5KqYGaSs/tbl7BCF6oTbNPUTvZ"
+          },
+          "filterByFormula": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Filter_By_Formula', ``, 'string') }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.airtableTool",
+        "typeVersion": 2.1,
+        "position": [
+          80,
+          220
+        ],
+        "id": "3039ee45-d2fe-429f-a873-c8d44022d3a6",
+        "name": "Providers Tool",
+        "credentials": {
+          "airtableOAuth2Api": {
+            "id": "18ojY9fuoAA6cHFF",
+            "name": "Airtable Personal Access Token account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "aggregate",
+          "collection": "={{ $fromAI('Query', `\n[\n  {\n    \"$match\": {\n      \"service\": \"{{service}}\",\n      \"location\": \"{{location}}\",\n      \"isActive\": true\n    }\n  }\n]\n`, 'json') }}\n",
+          "query": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Query', `Query the database using this querry:\n{{ $fromAI('Query', \\`\n[\n  {\n    \"$match\": {\n      \"service\": \"{{service}}\",\n      \"location\": \"{{location}}\",\n      \"isActive\": true\n    }\n  }\n]\n\\`, 'json') }}\n`, 'json') }}"
+        },
+        "type": "n8n-nodes-base.mongoDbTool",
+        "typeVersion": 1.2,
+        "position": [
+          360,
+          240
+        ],
+        "id": "fb28c9c6-acce-46ae-9733-18a53a7865b8",
+        "name": "MongoDB",
+        "credentials": {
+          "mongoDb": {
+            "id": "dtscmY2IWP48F2iD",
+            "name": "MongoDB account 2"
+          }
+        },
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:3000/api/payments/stk",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('JSON', ``, 'json') }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequestTool",
+        "typeVersion": 4.2,
+        "position": [
+          480,
+          240
+        ],
+        "id": "5e7edb63-006d-4b26-b938-006742ce7d87",
+        "name": "HTTP Request"
+      }
+    ],
+    "pinData": {},
+    "connections": {
+      "Telegram Trigger": {
+        "main": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI Agent": {
+        "main": [
+          [
+            {
+              "node": "Send a text message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Memory": {
+        "ai_memory": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_memory",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Brain": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Bookings Tool": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Providers Tool": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "MongoDB": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "active": false,
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "versionId": "bf951c3e-6a72-4bba-852f-250f41cbae34",
+    "meta": {
+      "templateCredsSetupCompleted": true,
+      "instanceId": "6e01532565d97edeb11b2dd8877444382e17b77c2d82e7f0c06560874f09933b"
+    },
+    "id": "ZGn9YYcgiCNAUsMV",
+    "tags": []
+  }
