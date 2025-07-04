@@ -105,6 +105,15 @@ Booking_Buddy/
 ![Provider Workflow](screenshots/booking_buddy_provider_n8n.png)
 *Booking Buddy - Provider n8n Workflow*
 
+---
+
+## Telegram Bots
+
+- **Client Bot:** [@booking_mate_bot](https://t.me/booking_mate_bot)
+- **Provider Bot:** [@booking_buddy_providers_bot](https://t.me/booking_buddy_providers_bot)
+
+---
+
 ### Booking Demo
 
 ![Booking Demo 1](screenshots/booking.png)
@@ -112,13 +121,6 @@ Booking_Buddy/
 
 ![Booking Demo 2](screenshots/booking1.png)
 *Booking process demo (step 2)*
-
----
-
-## Data & Integrations
-
-- **Google Sheets (Bookings Log):** [View Sheet](https://docs.google.com/spreadsheets/d/14dTcLprXXElZAhbC4OGUyXeq0uTDRlrczcvlR1HLK-c/edit?usp=sharing)
-- **Airtable Providers Table:** [View Table](https://airtable.com/appGs32Hc5KqYGaSs/shrFsT6DYu0Db86Hj)
 
 ---
 
@@ -138,21 +140,50 @@ PORT=3000
 
 ---
 
+## Data & Integrations
+
+- **Google Sheets (Bookings Log):** [View Sheet](https://docs.google.com/spreadsheets/d/14dTcLprXXElZAhbC4OGUyXeq0uTDRlrczcvlR1HLK-c/edit?usp=sharing)
+- **Airtable Providers Table:** [View Table](https://airtable.com/appGs32Hc5KqYGaSs/shrFsT6DYu0Db86Hj)
+
+---
+
 ## Contributing
 
-Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
+If you'd like to contribute to the project, please follow these steps:
+
+1. **Fork the repository:**
+   ```sh
+   git clone <your-repo-url>
+   cd Booking_Buddy
+   git checkout -b feature-branch
+   ```
+
+2. **Create a new branch:**
+   ```sh
+   git checkout -b feature-branch
+   ```
+
+3. **Make your changes and commit:**
+   ```sh
+   git add .
+   git commit -m "Added new feature"
+   ```
+
+4. **Push your changes:**
+   ```sh
+   git push origin feature-branch
+   ```
+
+5. **Create a pull request:**
+   - Go to the repository on GitHub.
+   - Click on "Pull requests"
+   - Click on "New pull request"
+   - Select your feature branch
+   - Add a title and description for your pull request
+   - Click "Create pull request"
 
 ---
 
 ## License
 
-This project is licensed under the ISC License.
-
----
-
-## Acknowledgements
-
-- [n8n](https://n8n.io/)
-- [M-PESA API](https://developer.safaricom.co.ke/)
-- [Telegram Bots](https://core.telegram.org/bots)
-- [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.git 
