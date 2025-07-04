@@ -115,6 +115,13 @@ Booking_Buddy/
 
 ---
 
+## Data & Integrations
+
+- **Google Sheets (Bookings Log):** [View Sheet](https://docs.google.com/spreadsheets/d/14dTcLprXXElZAhbC4OGUyXeq0uTDRlrczcvlR1HLK-c/edit?usp=sharing)
+- **Airtable Providers Table:** [View Table](https://airtable.com/appGs32Hc5KqYGaSs/shrFsT6DYu0Db86Hj)
+
+---
+
 ## Environment Variables
 
 Example `.env` file:
