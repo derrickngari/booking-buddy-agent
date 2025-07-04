@@ -1,12 +1,12 @@
-const express = require("express");
-require('dotenv/config');
-const paymentRoutes = require('./routes/paymentRoutes');
+import express, { json } from "express";
+import 'dotenv/config';
+import paymentRoutes from './routes/paymentRoutes.js';
 
 const PORT = process.env.PORT || 30001;
 const app = express();
 
 //middleware
-app.use(express.json());
+app.use(json());
 
 //routes
 app.get('/', (req, res) => {

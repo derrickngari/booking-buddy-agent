@@ -1,4 +1,4 @@
-const axios = require("axios");
+import axios from "axios";
 
 const MPESA_CONSUMER_KEY = process.env.MPESA_CONSUMER_KEY;
 const MPESA_CONSUMER_SECRET = process.env.MPESA_CONSUMER_SECRET;
@@ -29,6 +29,4 @@ async function mpesaMiddleware(req, res, next) {
     }
   }
 
-  module.exports = {
-    mpesaMiddleware
-  }
+  export default mpesaMiddleware

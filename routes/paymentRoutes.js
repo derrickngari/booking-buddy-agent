@@ -1,8 +1,8 @@
-const express = require("express");
-const router = express.Router();
-const { mpesaMiddleware } = require('../middlewares/mpesaMiddleware');
-const { sendStkPush } = require('../controllers/mpesaControllers');
+import { Router } from "express";
+const router = Router();
+import mpesaMiddleware from '../middlewares/mpesaMiddleware.js';
+import { sendStkPush } from '../controllers/mpesaControllers.js';
 
 router.post('/stk', mpesaMiddleware, sendStkPush)
 
-module.exports = router;
+export default router;

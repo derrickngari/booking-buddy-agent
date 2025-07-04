@@ -1,4 +1,4 @@
-const axios = require('axios');
+import axios from 'axios';
 
 const MPESA_BUSINESS_SHORTCODE = process.env.MPESA_BUSINESS_SHORTCODE;
 const MPESA_PASSKEY = process.env.MPESA_PASSKEY;
@@ -7,7 +7,7 @@ const MPESA_BASE_URL =
       ? "https://api.safaricom.co.ke"
       : "https://sandbox.safaricom.co.ke";
 
-exports.sendStkPush = async (req, res) => {
+export async function sendStkPush(req, res) {
     try {
         const token = req.token;
         if (!token) throw new Error('Failed to get M-Pesa token');
